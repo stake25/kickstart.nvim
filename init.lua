@@ -107,6 +107,10 @@ vim.opt.number = true
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
 
+-- enable relative lines
+vim.opt.relativenumber = true
+vim.opt.number = true
+
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
 
@@ -157,12 +161,25 @@ vim.opt.scrolloff = 10
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
+-- jk to exit insert mode
+vim.keymap.set('i', 'jk', '<Esc>', { noremap = true, silent = true })
+
+-- leader bd to close current buffer
+vim.keymap.set('n', '<leader>bd', ':bdelete<CR>', { desc = 'Close buffer' })
+
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+-- Neotree keymaps
+vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'NeoTree' })
+
+-- Keybindings for Bufferline navigation
+vim.api.nvim_set_keymap('n', '<S-h>', ':BufferLineCyclePrev<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<S-l>', ':BufferLineCycleNext<CR>', { noremap = true, silent = true })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -240,6 +257,131 @@ require('lazy').setup({
   --    require('gitsigns').setup({ ... })
   --
   -- See `:help gitsigns` to understand what the configuration keys do
+
+  -- Add Copilot
+  {
+    'github/copilot.vim',
+    config = function()
+      -- Optionally, you can add your own configurations here.
+    end,
+  },
+
+  -- Add Bufferline
+  {
+    'akinsho/bufferline.nvim',
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    config = function()
+      require('bufferline').setup {
+        options = {
+          numbers = 'both',
+          close_command = 'bdelete! %d',
+          right_mouse_command = 'bdelete! %d',
+          left_mouse_command = 'buffer %d',
+          middle_mouse_command = nil,
+          indicator = {
+            icon = '▎',
+            style = 'icon',
+          },
+          buffer_close_icon = '',
+          modified_icon = '●',
+          close_icon = '',
+          left_trunc_marker = '',
+          right_trunc_marker = '',
+          max_name_length = 18,
+          max_prefix_length = 15,
+          tab_size = 18,
+          diagnostics = 'nvim_lsp',
+          diagnostics_update_in_insert = false,
+          diagnostics_indicator = function(count, level, diagnostics_dict, context)
+            local icon = level:match 'error' and ' ' or ' '
+            return ' ' .. icon .. count
+          end,
+          offsets = { { filetype = 'NvimTree', text = 'File Explorer', text_align = 'center' } },
+          show_buffer_icons = true,
+          show_buffer_close_icons = true,
+          show_close_icon = true,
+          show_tab_indicators = true,
+          persist_buffer_sort = true,
+          separator_style = 'slant',
+          enforce_regular_tabs = false,
+          always_show_bufferline = true,
+          sort_by = 'id',
+        },
+      }
+    end,
+  },
+
+  -- Add Neotree
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v2.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- optional, for file icons
+      'MunifTanjim/nui.nvim',
+    },
+    config = function()
+      require('neo-tree').setup {
+        close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
+        popup_border_style = 'rounded',
+        enable_git_status = true,
+        enable_diagnostics = true,
+        default_component_configs = {
+          icon = {
+            folder_closed = '',
+            folder_open = '',
+            folder_empty = '',
+          },
+          git_status = {
+            symbols = {
+              added = '✚',
+              modified = '',
+              deleted = '✖',
+              renamed = '',
+              untracked = '',
+              ignored = '',
+              unstaged = '',
+              staged = '',
+              conflict = '',
+            },
+          },
+        },
+        window = {
+          position = 'left',
+          width = 30,
+          mappings = {
+            ['<space>'] = 'toggle_node',
+            ['l'] = 'open',
+            ['S'] = 'split_with_window_picker',
+            ['s'] = 'vsplit_with_window_picker',
+            ['t'] = 'open_tabnew',
+            ['w'] = 'open_with_window_picker',
+            ['C'] = 'close_node',
+            ['a'] = 'add',
+            ['A'] = 'add_directory',
+            ['d'] = 'delete',
+            ['r'] = 'rename',
+            ['y'] = 'copy_to_clipboard',
+            ['x'] = 'cut_to_clipboard',
+            ['p'] = 'paste_from_clipboard',
+            ['c'] = 'copy',
+            ['m'] = 'move',
+            ['q'] = 'close_window',
+          },
+        },
+        filesystem = {
+          filtered_items = {
+            hide_dotfiles = false,
+            hide_gitignored = false,
+          },
+          follow_current_file = true,
+          group_empty_dirs = true,
+          hijack_netrw_behavior = 'open_default',
+        },
+      }
+    end,
+  },
+
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
